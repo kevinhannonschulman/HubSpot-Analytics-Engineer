@@ -20,4 +20,4 @@ models:
     columns:
       - name: listing_id
       - name: amenities_change_date
-      - name: list_amenities_changes
+      - name: amenities
