@@ -1,0 +1,6 @@
+version: 2
+
+models:
+  - name: stg_amenities_changelog
+  - name: stg_calendar
+  - name: stg_listings
