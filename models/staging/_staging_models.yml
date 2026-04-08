@@ -25,7 +25,7 @@ models:
       - name: num_baths
       - name: bedrooms
       - name: beds
-      -name : amenities
+      - name : amenities
   - name: stg_amenities_changelog
     columns:
       - name: listing_id
