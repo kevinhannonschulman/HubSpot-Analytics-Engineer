@@ -13,18 +13,8 @@ models:
   - name: stg_listings
     columns:
       - name: listing_id
-      - name: property_name
-      - name: host_id
-      - name: host_join_date
       - name: host_location
-      - name: host_verifications --removed brackets from json--
       - name: neighborhood
-      - name: property_type
-      - name: room_type
-      - name: max_people
-      - name: num_baths
-      - name: bedrooms
-      - name: beds
       - name : amenities
   - name: stg_amenities_changelog
     columns:
