@@ -7,14 +7,14 @@ with source as (
 , reformat as (
     select listing_id
     , date(change_at) as amenities_change_date --removed timestamp from amenities change date to simplify--
-    , replace(amenities, '"', '') as amenities --removed quotes from amenities json--
+    , replace(amenities, '"', '') as amenities --removed quotes--
     from source
 )
 
 , final as (
     select listing_id
     , amenities_change_date
-    , trim(amenities, '[]') as amenities --trimmed brackets from amenities json--
+    , trim(amenities, ' []') as amenities --trimmed leading space and brackets--
     from reformat
 )
 
