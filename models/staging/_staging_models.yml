@@ -13,7 +13,6 @@ models:
   - name: stg_listings
     columns:
       - name: listing_id
-      - name: host_location
       - name: neighborhood
       - name : amenities
   - name: stg_amenities_changelog

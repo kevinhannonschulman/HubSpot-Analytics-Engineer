@@ -1,4 +1,4 @@
-{{ config(materialized='view') }}
+{{config(materialized='view')}}
 
 with source as (
     select * from {{source('dbt_models', 'Listings')}}
@@ -12,6 +12,7 @@ with source as (
     , neighborhood
     , replace((amenities), '"', '') as amenities --removed quotes--
     from source
+    where id is not null --mart models will be at day/listing grain so filtering out rows without listing_id--
 )
 
 , final as (
