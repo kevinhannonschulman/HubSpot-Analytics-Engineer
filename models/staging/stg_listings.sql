@@ -8,7 +8,6 @@ with source as (
 
 , reformat as (
     select id as listing_id
-    , host_location
     , neighborhood
     , replace((amenities), '"', '') as amenities --removed quotes--
     from source
@@ -17,7 +16,6 @@ with source as (
 
 , final as (
     select listing_id
-    , host_location
     , neighborhood
     , trim((amenities), '[]') as amenities --removed brackets. using replace with both brackets and quotes didn't remove both so needed to use two CTEs--
     from reformat
