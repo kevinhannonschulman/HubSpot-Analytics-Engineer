@@ -1,7 +1,7 @@
 version: 2
 
 models:
-  - name: int_current_amenities_listings
+  - name: int_updated_amenities_listings
     columns:
       - name: listing_id
       - name: neighborhood
