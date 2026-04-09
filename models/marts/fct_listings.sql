@@ -15,6 +15,7 @@
     , c.reservation_date
     , u.neighborhood
     , u.current_amenities as amenities
+    , u.amenities_change_date as last_date_amenity_change
     , c.room_availability
     , c.reservation_id
     , c.price
