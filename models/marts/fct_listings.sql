@@ -25,4 +25,50 @@
     left join int_updated_amenities_listings u on c.listing_id = u.listing_id
 )
 
-select * from final
+, eligible_rentals as (
+    select listing_id
+    , reservation_date
+    , room_availability
+    , maximum_nights
+    , amenities
+    from final
+    where amenities like '%Lockbox%' and amenities like '%First aid kit%' and room_availability is true
+)
+
+, datecount as (
+    select listing_id
+    , reservation_date
+    , dense_rank() over (partition by listing_id order by reservation_date) as rnk
+    from eligible_rentals
+)
+
+, dategroups as (
+    select listing_id
+    , reservation_date
+    , reservation_date - (interval 1 day) * rnk as date_group
+    from datecount
+)
+
+, consecutive as (
+    select listing_id
+    , min(reservation_date) as interval_start
+    , max(reservation_date) as interval_end
+    , 1 + date_diff(max(reservation_date), min(reservation_date), day) as max_consecutive
+    from dategroups
+    group by listing_id, date_group
+    order by max_consecutive desc
+)
+
+, longest_possible_stay as (
+    select e.listing_id
+    , c.interval_start
+    , c.interval_end
+    , e.maximum_nights as maximum_days_allowed
+    , c.max_consecutive as maximum_days_available
+    from eligible_rentals e
+    inner join consecutive c on e.listing_id = c.listing_id
+    group by all
+    order by c.max_consecutive desc
+)
+
+select * from longest_possible_stay
