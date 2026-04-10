@@ -33,6 +33,104 @@ month_extract as (
 2. Write a query to find the average price increase for each neighborhood from July 12th
 2021 to July 11th 2022 .
 
+start_window as (
+    select neighborhood
+    , avg(price) over (partition by neighborhood) as avg_neighborhood_price_start
+    , reservation_date
+    from final
+    where neighborhood is not null and reservation_date = '2021-07-12'
+)
+
+, end_window as (
+    select neighborhood
+    , avg(price) over (partition by neighborhood) as avg_neighborhood_price_end
+    , reservation_date
+    from final
+    where neighborhood is not null and reservation_date = '2022-07-11')
+
+, avg_price_increase as (
+    select distinct(s.neighborhood)
+    , s.avg_neighborhood_price_start
+    , e.avg_neighborhood_price_end
+    , (e.avg_neighborhood_price_end - s.avg_neighborhood_price_start) as avg_increase
+    from start_window s
+    join end_window e on s.neighborhood = e.neighborhood
+)
+
+select * from avg_price_increase
+
+
+v2 (returns null values)
+
+
+, avg_neighborhood_prices as (
+    select neighborhood
+    , avg(price) over (partition by neighborhood order by reservation_date) as avg_price
+    , reservation_date
+    from final
+    where neighborhood is not null
+)
+
+
+, calculate as (
+    select distinct (neighborhood)
+    , avg_price
+    , reservation_date
+    , lag(avg_price, 364) over (order by reservation_date) as previous_avg_price
+    from avg_neighborhood_prices
+)
+
+select * from calculate
+
 3. Write a query to determine the longest possible stay duration for rental listings that
 include both a lockbox and first aid kit in their amenities, considering both listing
 availability windows and maximum stay limits set by property owners.
+
+--only selecting rentals that match the amenity criteria, room_availability is true will create gaps for gaps and islands--
+
+, eligible_rentals as (
+    select listing_id
+    , reservation_date
+    , room_availability
+    , maximum_nights
+    , amenities
+    from final
+    where amenities like '%Lockbox%' and amenities like '%First aid kit%' and room_availability is true
+)
+
+, datecount as (
+    select listing_id
+    , reservation_date
+    , dense_rank() over (partition by listing_id order by reservation_date) as rnk
+    from eligible_rentals
+)
+
+, dategroups as (
+    select listing_id
+    , reservation_date
+    , reservation_date - (interval 1 day) * rnk as date_group
+    from datecount
+)
+
+, consecutive as (
+    select listing_id
+    , min(reservation_date) as interval_start
+    , max(reservation_date) as interval_end
+    , 1 + date_diff(max(reservation_date), min(reservation_date), day) as max_consecutive
+    from dategroups
+    group by listing_id, date_group
+    order by max_consecutive desc
+)
+
+, longest_possible_stay as (
+    select e.listing_id
+    , c.interval_start
+    , c.interval_end
+    , e.maximum_nights as maximum_days_allowed
+    , c.max_consecutive as maximum_days_available
+    from eligible_rentals e
+    inner join consecutive c on e.listing_id = c.listing_id
+    order by c.max_consecutive desc
+)
+
+select * from longest_possible_stay
