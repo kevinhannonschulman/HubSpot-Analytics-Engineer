@@ -1,6 +1,6 @@
 1. Write a query to find the total revenue and percentage of revenue by month segmented
 by whether or not air conditioning exists on the listing.
-
+--revenue = when room is booked therefore room_availability is false--
 month_extract as (
     select date_trunc(reservation_date, month) as reservation_month
     , amenities
@@ -9,7 +9,7 @@ month_extract as (
     from final
     where room_availability is false
 )
-
+--using window functions to calculate revenue for A/C and non-A/C units partitioned by month--
 , ac_revenue as (select distinct reservation_month as reservation_month
     , sum(price) over (partition by reservation_month) as monthly_revenue_with_ac
     from month_extract
@@ -19,7 +19,7 @@ month_extract as (
     , sum(price) over (partition by reservation_month) as monthly_revenue_without_ac
     from month_extract
     where amenities not like '%Air conditioning%')
-
+--joining ctes to find total revenue/percentage of revenue from each type of unit--
 , revenue_breakdown as (
     select a.reservation_month
     , a.monthly_revenue_with_ac
@@ -32,7 +32,7 @@ month_extract as (
 
 2. Write a query to find the average price increase for each neighborhood from July 12th
 2021 to July 11th 2022 .
-
+--using window function to calculate average price partitioned by neighborhood on start date and end date--
 start_window as (
     select neighborhood
     , avg(price) over (partition by neighborhood) as avg_neighborhood_price_start
@@ -47,7 +47,7 @@ start_window as (
     , reservation_date
     from final
     where neighborhood is not null and reservation_date = '2022-07-11')
-
+--joining ctes to find average price increase in each neighborhood over given time period--
 , avg_price_increase as (
     select distinct(s.neighborhood)
     , s.avg_neighborhood_price_start
@@ -62,7 +62,7 @@ select * from avg_price_increase
 
 v2 (returns null values)
 
-
+-- tried to create a simpler, more interchangeable model by finding average price per neighborhood on each date--
 , avg_neighborhood_prices as (
     select neighborhood
     , avg(price) over (partition by neighborhood order by reservation_date) as avg_price
@@ -71,7 +71,7 @@ v2 (returns null values)
     where neighborhood is not null
 )
 
-
+--wanted to use the lag window function to calculate avg_price 364 days prior by using previous cte but every value was null--
 , calculate as (
     select distinct (neighborhood)
     , avg_price
@@ -86,7 +86,7 @@ select * from calculate
 include both a lockbox and first aid kit in their amenities, considering both listing
 availability windows and maximum stay limits set by property owners.
 
---only selecting rentals that match the amenity criteria, room_availability is true will create gaps for gaps and islands--
+--selecting rentals that match amenity criteria, room_availability is true will create the gaps for gaps and islands problem--
 
 , eligible_rentals as (
     select listing_id
@@ -97,21 +97,21 @@ availability windows and maximum stay limits set by property owners.
     from final
     where amenities like '%Lockbox%' and amenities like '%First aid kit%' and room_availability is true
 )
-
+--ranking the date column partitioned by listing_id which will allow calculation of consecutive days--
 , datecount as (
     select listing_id
     , reservation_date
-    , dense_rank() over (partition by listing_id order by reservation_date) as rnk
+    , dense_rank() over (partition by listing_id order by reservation_date) as rank
     from eligible_rentals
 )
-
+--subtracting rank from reservation_date will create groups a.k.a islands of consecutive days--
 , dategroups as (
     select listing_id
     , reservation_date
     , reservation_date - (interval 1 day) * rnk as date_group
     from datecount
 )
-
+--finding start/end dates and calculating number of consecutive days within each interval group--
 , consecutive as (
     select listing_id
     , min(reservation_date) as interval_start
@@ -121,7 +121,7 @@ availability windows and maximum stay limits set by property owners.
     group by listing_id, date_group
     order by max_consecutive desc
 )
-
+--joining ctes to include maximum days allowed by each rental property--
 , longest_possible_stay as (
     select e.listing_id
     , c.interval_start
