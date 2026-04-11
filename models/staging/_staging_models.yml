@@ -1,0 +1,22 @@
+version: 2
+
+models:
+  - name: stg_calendar
+    columns:
+      - name: listing_id
+      - name: reservation_date
+      - name: room_availability
+      - name: reservation_id
+      - name: price
+      - name: minimum_nights
+      - name: maximum_nights
+  - name: stg_listings
+    columns:
+      - name: listing_id
+      - name: neighborhood
+      - name : amenities
+  - name: stg_amenities_changelog
+    columns:
+      - name: listing_id
+      - name: amenities_change_date
+      - name: amenities

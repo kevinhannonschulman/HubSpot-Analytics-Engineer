@@ -1,0 +1,14 @@
+version: 2
+
+models:
+  - name: int_updated_amenities_listings
+    columns:
+      - name: listing_id
+      - name: neighborhood
+      - name: amenities_change_date
+      - name: current_amenities
+      - name: stg_listings_amenities
+    tests:
+     - dbt_expectations.expect_column_pair_values_to_be_equal:
+        column_A: current_amenities
+        column_B: stg_listings_amenities

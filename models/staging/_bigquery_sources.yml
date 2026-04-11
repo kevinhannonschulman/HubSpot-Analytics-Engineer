@@ -1,0 +1,10 @@
+version: 2
+
+sources:
+  - name: dbt_models
+    database: hubspot-analytics-engineer
+    schema: dbt_models
+    tables:
+      - name: Calendar
+      - name: Listings
+      - name: Amenities_Changelog

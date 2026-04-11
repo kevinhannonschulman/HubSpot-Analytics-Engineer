@@ -1,0 +1,15 @@
+version: 2
+
+models:
+  - name: fct_listings
+    columns:
+      - name: listing_id
+      - name: reservation_date
+      - name: neighborhood
+      - name: amenities
+      - name: last_date_amenity_change
+      - name: room_availability
+      - name: reservation_id
+      - name: price
+      - name: minimum_nights
+      - name: maximum_nights
