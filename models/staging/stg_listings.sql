@@ -19,6 +19,7 @@ with source as (
     , neighborhood
     , trim((amenities), '[]') as amenities --removed brackets. using replace with both brackets and quotes didn't remove both so needed to use two CTEs--
     from reformat
+    group by all
 )
 
 select * from final

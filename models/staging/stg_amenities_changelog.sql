@@ -16,6 +16,7 @@ with source as (
     , amenities_change_date
     , trim(amenities, ' []') as amenities --trimmed leading space and brackets--
     from reformat
+    group by all
 )
 
 select * from final

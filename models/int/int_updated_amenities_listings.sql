@@ -29,6 +29,8 @@ with stg_amenities_changelog as (
 , final as (
     select l.listing_id, l.neighborhood, c.amenities_change_date, c.amenities as current_amenities, l.amenities as stg_listings_amenities
     from stg_listings l
-    inner join current_amenities_final c on l.listing_id = c.listing_id)
+    inner join current_amenities_final c on l.listing_id = c.listing_id
+    group by all
+)
 
 select * from final

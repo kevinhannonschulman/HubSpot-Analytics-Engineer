@@ -63,24 +63,26 @@ select * from avg_price_increase
 v2 (returns null values)
 
 -- tried to create a simpler, more interchangeable model by finding average price per neighborhood on each date--
-, avg_neighborhood_prices as (
-    select neighborhood
-    , avg(price) over (partition by neighborhood order by reservation_date) as avg_price
+, start_window as (
+    select distinct neighborhood
+    , avg(price) over (partition by neighborhood) as avg_neighborhood_price_start
     , reservation_date
     from final
     where neighborhood is not null
+    order by reservation_date desc
 )
 
 --wanted to use the lag window function to calculate avg_price 364 days prior by using previous cte but every value was null--
-, calculate as (
-    select distinct (neighborhood)
-    , avg_price
+, end_window as (
+    select neighborhood
     , reservation_date
-    , lag(avg_price, 364) over (order by reservation_date) as previous_avg_price
-    from avg_neighborhood_prices
+    , avg_neighborhood_price_start
+    , lag(avg_neighborhood_price_start, 364) over (order by reservation_date) as prev_avg
+    from start_window
+    group by all
 )
 
-select * from calculate
+select * from end_window
 
 3. Write a query to determine the longest possible stay duration for rental listings that
 include both a lockbox and first aid kit in their amenities, considering both listing

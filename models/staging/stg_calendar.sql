@@ -13,6 +13,7 @@ with source as (
     , minimum_nights
     , maximum_nights
     from source
+    group by all
 )
 
 select * from final
