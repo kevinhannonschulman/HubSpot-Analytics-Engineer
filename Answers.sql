@@ -69,7 +69,7 @@ v2 (returns null values)
 
 -- tried to create a simpler, more interchangeable model by finding average price per neighborhood on each date--
 , start_window as (
-    select distinct neighborhood
+    select neighborhood
     , avg(price) over (partition by neighborhood) as avg_neighborhood_price_start
     , reservation_date
     from final
