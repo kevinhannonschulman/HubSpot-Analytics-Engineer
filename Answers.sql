@@ -1,5 +1,6 @@
 1. Write a query to find the total revenue and percentage of revenue by month segmented
 by whether or not air conditioning exists on the listing.
+
 --revenue = when room is booked therefore room_availability is false--
 month_extract as (
     select date_trunc(reservation_date, month) as reservation_month
@@ -29,9 +30,13 @@ month_extract as (
     , (n.monthly_revenue_without_ac / (a.monthly_revenue_with_ac + n.monthly_revenue_without_ac))*100 as revenue_percent_without_ac
     from ac_revenue a
     inner join no_ac_revenue n on a.reservation_month = n.reservation_month
+)
+
+select * from revenue_breakdown
 
 2. Write a query to find the average price increase for each neighborhood from July 12th
-2021 to July 11th 2022 .
+2021 to July 11th 2022.
+
 --using window function to calculate average price partitioned by neighborhood on start date and end date--
 start_window as (
     select neighborhood
@@ -72,7 +77,7 @@ v2 (returns null values)
     order by reservation_date desc
 )
 
---wanted to use the lag window function to calculate avg_price 364 days prior by using previous cte but every value was null--
+--lag window function to calculate average price 364 days prior using previous cte but every value was null, likely partitioned too narrowly--
 , end_window as (
     select neighborhood
     , reservation_date
