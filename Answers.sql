@@ -30,6 +30,7 @@ month_extract as (
     , (n.monthly_revenue_without_ac / (a.monthly_revenue_with_ac + n.monthly_revenue_without_ac))*100 as revenue_percent_without_ac
     from ac_revenue a
     inner join no_ac_revenue n on a.reservation_month = n.reservation_month
+    group by all
 )
 
 select * from revenue_breakdown
@@ -59,35 +60,11 @@ start_window as (
     , e.avg_neighborhood_price_end
     , (e.avg_neighborhood_price_end - s.avg_neighborhood_price_start) as avg_increase
     from start_window s
-    join end_window e on s.neighborhood = e.neighborhood
-)
-
-select * from avg_price_increase
-
-
-v2 (returns null values)
-
--- tried to create a simpler, more interchangeable model by finding average price per neighborhood on each date--
-, start_window as (
-    select neighborhood
-    , avg(price) over (partition by neighborhood) as avg_neighborhood_price_start
-    , reservation_date
-    from final
-    where neighborhood is not null
-    order by reservation_date desc
-)
-
---lag window function to calculate average price 364 days prior using previous cte but every value was null, likely partitioned too narrowly--
-, end_window as (
-    select neighborhood
-    , reservation_date
-    , avg_neighborhood_price_start
-    , lag(avg_neighborhood_price_start, 364) over (order by reservation_date) as prev_avg
-    from start_window
+    inner join end_window e on s.neighborhood = e.neighborhood
     group by all
 )
 
-select * from end_window
+select * from avg_price_increase
 
 3. Write a query to determine the longest possible stay duration for rental listings that
 include both a lockbox and first aid kit in their amenities, considering both listing
@@ -113,23 +90,22 @@ availability windows and maximum stay limits set by property owners.
     from eligible_rentals
 )
 --subtracting rank from reservation_date will create groups a.k.a islands of consecutive days--
---date_group will remain the same when reservation_dates are consecutive because - (interval 1 day) * rnk will always return to same date--
+--island_start_date will remain the same when reservation_dates are consecutive because - (interval 1 day) * rnk will always return to same date--
 , dategroups as (
     select listing_id
     , reservation_date
-    , reservation_date - (interval 1 day) * rnk as date_group
+    , reservation_date - (interval 1 day) * rnk as island_start_date
     from datecount
 )
---finding start/end dates and calculating number of consecutive days within each interval group--
---date_group remains the same during consecutive streaks so can group by date_group to find start/end date of streak and number of days--
+--finding start/end dates and calculating number of consecutive days within each island--
+--island_start_date remains the same during consecutive streaks so can group by date_group to find start/end date and number of consecutive days--
 , consecutive as (
     select listing_id
     , min(reservation_date) as interval_start
     , max(reservation_date) as interval_end
     , 1 + date_diff(max(reservation_date), min(reservation_date), day) as max_consecutive
     from dategroups
-    group by listing_id, date_group
-    order by max_consecutive desc
+    group by listing_id, island_start_date
 )
 --joining ctes to include maximum days allowed by each rental property--
 , longest_possible_stay as (
