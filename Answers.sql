@@ -105,13 +105,15 @@ availability windows and maximum stay limits set by property owners.
     where amenities like '%Lockbox%' and amenities like '%First aid kit%' and room_availability is true
 )
 --ranking the date column partitioned by listing_id which will allow calculation of consecutive days--
+--row_number() will always be consecutive but reservation_date won't because there will be gaps when room_availability is false--
 , datecount as (
     select listing_id
     , reservation_date
-    , dense_rank() over (partition by listing_id order by reservation_date) as rank
+    , row_number() over (partition by listing_id order by reservation_date) as rnk
     from eligible_rentals
 )
 --subtracting rank from reservation_date will create groups a.k.a islands of consecutive days--
+--date_group will remain the same when reservation_dates are consecutive because - (interval 1 day) * rnk will always return to same date--
 , dategroups as (
     select listing_id
     , reservation_date
@@ -119,6 +121,7 @@ availability windows and maximum stay limits set by property owners.
     from datecount
 )
 --finding start/end dates and calculating number of consecutive days within each interval group--
+--date_group remains the same during consecutive streaks so can group by date_group to find start/end date of streak and number of days--
 , consecutive as (
     select listing_id
     , min(reservation_date) as interval_start
@@ -137,6 +140,7 @@ availability windows and maximum stay limits set by property owners.
     , c.max_consecutive as maximum_days_available
     from eligible_rentals e
     inner join consecutive c on e.listing_id = c.listing_id
+    group by all
     order by c.max_consecutive desc
 )
 
