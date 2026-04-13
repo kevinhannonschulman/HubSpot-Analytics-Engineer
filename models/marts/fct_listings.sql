@@ -22,7 +22,7 @@
     , c.minimum_nights
     , c.maximum_nights
     from stg_calendar c
-    left join int_updated_amenities_listings u on c.listing_id = u.listing_id
+    inner join int_updated_amenities_listings u on c.listing_id = u.listing_id
     group by all
 )
 
