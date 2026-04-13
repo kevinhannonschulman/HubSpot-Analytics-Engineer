@@ -11,12 +11,12 @@ month_extract as (
     where room_availability is false
 )
 --using window functions to calculate revenue for A/C and non-A/C units partitioned by month--
-, ac_revenue as (select distinct reservation_month as reservation_month
+, ac_revenue as (select reservation_month
     , sum(price) over (partition by reservation_month) as monthly_revenue_with_ac
     from month_extract
     where amenities like '%Air conditioning%')
 
-, no_ac_revenue as (select distinct reservation_month
+, no_ac_revenue as (select reservation_month
     , sum(price) over (partition by reservation_month) as monthly_revenue_without_ac
     from month_extract
     where amenities not like '%Air conditioning%')
@@ -70,7 +70,7 @@ select * from avg_price_increase
 include both a lockbox and first aid kit in their amenities, considering both listing
 availability windows and maximum stay limits set by property owners.
 
---selecting rentals that match amenity criteria, room_availability is true will create the gaps for gaps and islands problem--
+--selecting rentals that match amenity criteria, room_availability is true will create gaps for gaps and islands problem--
 
 , eligible_rentals as (
     select listing_id
@@ -81,7 +81,6 @@ availability windows and maximum stay limits set by property owners.
     from final
     where amenities like '%Lockbox%' and amenities like '%First aid kit%' and room_availability is true
 )
---ranking the date column partitioned by listing_id which will allow calculation of consecutive days--
 --row_number() will always be consecutive but reservation_date won't because there will be gaps when room_availability is false--
 , datecount as (
     select listing_id
@@ -97,13 +96,12 @@ availability windows and maximum stay limits set by property owners.
     , reservation_date - (interval 1 day) * rnk as island_start_date
     from datecount
 )
---finding start/end dates and calculating number of consecutive days within each island--
---island_start_date remains the same during consecutive streaks so can group by date_group to find start/end date and number of consecutive days--
+--island_start_date remains the same during consecutive streaks so can group by islands to find start/end date and number of consecutive days--
 , consecutive as (
     select listing_id
     , min(reservation_date) as interval_start
     , max(reservation_date) as interval_end
-    , 1 + date_diff(max(reservation_date), min(reservation_date), day) as max_consecutive
+    , 1 + date_diff(max(reservation_date), min(reservation_date), day) as max_consecutive --add 1 to include start/end date--
     from dategroups
     group by listing_id, island_start_date
 )
