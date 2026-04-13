@@ -2,6 +2,7 @@
 by whether or not air conditioning exists on the listing.
 
 '''sql
+
 --revenue = when room is booked therefore room_availability is false--
 month_extract as (
     select date_trunc(reservation_date, month) as reservation_month
@@ -35,10 +36,14 @@ month_extract as (
 )
 
 select * from revenue_breakdown
+
 '''
+
 2. Write a query to find the average price increase for each neighborhood from July 12th
 2021 to July 11th 2022.
+
 '''sql
+
 --using window function to calculate average price partitioned by neighborhood on start date and end date--
 start_window as (
     select neighborhood
@@ -66,11 +71,15 @@ start_window as (
 )
 
 select * from avg_price_increase
+
 '''
+
 3. Write a query to determine the longest possible stay duration for rental listings that
 include both a lockbox and first aid kit in their amenities, considering both listing
 availability windows and maximum stay limits set by property owners.
+
 '''sql
+
 --selecting rentals that match amenity criteria, room_availability is true will create gaps for gaps and islands problem--
 
 , eligible_rentals as (
@@ -120,4 +129,5 @@ availability windows and maximum stay limits set by property owners.
 )
 
 select * from longest_possible_stay
+
 '''
