@@ -55,7 +55,7 @@ start_window as (
     where neighborhood is not null and reservation_date = '2022-07-11')
 --joining ctes to find average price increase in each neighborhood over given time period--
 , avg_price_increase as (
-    select distinct(s.neighborhood)
+    select s.neighborhood
     , s.avg_neighborhood_price_start
     , e.avg_neighborhood_price_end
     , (e.avg_neighborhood_price_end - s.avg_neighborhood_price_start) as avg_increase
